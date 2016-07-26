@@ -19,7 +19,25 @@ func importConfiguration(configPath string) (configuration, error) {
 
 	json.Unmarshal(f, &c)
 
-	fmt.Printf("Done. Configuration data: \n %+v \n", c)
+	fmt.Printf("Done.\n")
 
 	return c, err
+}
+
+//Returns true if all succeeded, else false.
+func checkSuccess(res []updateResults, print bool) bool {
+	var status bool
+	for _, val := range res {
+		if !val.Success {
+			status = false
+			if !print {
+				return status
+			}
+		}
+		if print {
+			fmt.Printf("%v  -  %v\n", val.LocationID, val.Success)
+		}
+	}
+
+	return status
 }

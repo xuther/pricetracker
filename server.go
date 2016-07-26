@@ -1,41 +1,33 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/labstack/echo"
+	"github.com/labstack/echo/engine/standard"
+	"github.com/labstack/echo/middleware"
+)
 
 var config = configuration{}
 
 func main() {
-
-	val, err := getPrice("https://braddockandlogan-apts.securecafe.com/onlineleasing/rock-creek-ridge-townhomes/oleapplication.aspx?stepname=Floorplan&myOlePropertyid=45723",
-		`<td *data-selenium-id *= *"Rent_1">\$([0-9,]+)-.+?<\/td>`)
-	if err != nil {
-		fmt.Printf("ERROR: %s\n", err.Error())
-	} else {
-		fmt.Printf("Price: %s\n", val)
-	}
-
 	c, err := importConfiguration("./config.json")
+	if err != nil {
+		fmt.Printf("Could not import the configuration file, check that it exists: %s\n", err.Error())
+	}
 	config = c
 
-	test := location{Name: "North Bend Townhomes No Den",
-		Description: "The lowest price townhomes in north bend. No den.",
-		Address:     "https://braddockandlogan-apts.securecafe.com/onlineleasing/rock-creek-ridge-townhomes/oleapplication.aspx?stepname=Floorplan&myOlePropertyid=45723",
-		Regex:       `<td *data-selenium-id *= *"Rent_1">\$([0-9,]+)-.+?<\/td>`}
-	err = insertLocation(&test)
-	if err != nil {
-		fmt.Printf("%s\n", err.Error())
-	}
-	/*
-		if err != nil {
-			fmt.Printf("Could not import the configuration file, check that it exists: %s\n", err.Error())
-		}
-		config = c
+	e := echo.New()
+	e.Pre(middleware.RemoveTrailingSlash())
+	e.GET("/api/locations/prices", getAllPricesHandler)
+	e.GET("/api/locations", getAllLocationsHandler)
+	e.GET("/api/locations/:LocationID", getLocationByIDHandler)
+	e.GET("/api/locations/:LocationID/prices", getLocationPriceByIDHandler)
+	e.POST("/api/locations", addLocationHandler)
+	//this might not be needed, do internally?
+	e.POST("/api/locations/prices/update", updatePricesHandler)
+	e.Run(standard.New(":8888"))
 
-		e := echo.New()
-		e.Pre(middleware.RemoveTrailingSlash())
+	//eventually we need to accept command line parameters.
 
-		e.Run(standard.New(":8888"))
-
-		//eventually we need to accept command line parameters.
-	*/
 }
